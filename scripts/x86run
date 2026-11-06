@@ -1,0 +1,35 @@
+#!/usr/bin/env bash
+# =============================================================================
+#  x86run — lanzador único dentro del rootfs.
+#    x86run app.exe [args]       -> ejecuta un .exe de Windows (Wine bajo Box64)
+#    x86run --linux ./binario    -> ejecuta un binario Linux x86_64 con Box64
+#    x86run --init               -> crea/actualiza el prefijo de Wine (1ª vez)
+#    x86run --winecfg            -> configurador de Wine
+#    x86run --version            -> versiones de Box64 y Wine (prueba de humo)
+# =============================================================================
+set -euo pipefail
+
+WINE_DIR=/opt/wine
+
+# Prefijo de Wine = el "C:\" virtual. Uno por usuario.
+export WINEPREFIX="${WINEPREFIX:-$HOME/.wine}"
+export WINEARCH=win64
+export WINEDEBUG="${WINEDEBUG:--all}"          # sin logs de Wine (más rápido)
+export DISPLAY="${DISPLAY:-:0}"                # Termux:X11 usa :0
+export PULSE_SERVER="${PULSE_SERVER:-127.0.0.1}"  # PulseAudio de Termux (TCP)
+# No descargar Mono/Gecko en el primer arranque (tardan y fallan sin red).
+export WINEDLLOVERRIDES="${WINEDLLOVERRIDES:-mscoree,mshtml=d}"
+# Rutas donde Box64 buscará las bibliotecas x86_64 de Wine.
+export BOX64_LD_LIBRARY_PATH="${BOX64_LD_LIBRARY_PATH:-$WINE_DIR/lib:$WINE_DIR/lib/wine/x86_64-unix}"
+export BOX64_PATH="${BOX64_PATH:-$WINE_DIR/bin}"
+
+usage() { sed -n '2,10p' "$0" | sed 's/^# \{0,1\}//'; }
+
+case "${1:-}" in
+  ""|-h|--help) usage ;;
+  --linux)      shift; exec box64 "$@" ;;
+  --version)    box64 --version; box64 "$WINE_DIR/bin/wine64" --version ;;
+  --init)       exec box64 "$WINE_DIR/bin/wine64" wineboot --init ;;
+  --winecfg)    exec box64 "$WINE_DIR/bin/wine64" winecfg ;;
+  *)            exec box64 "$WINE_DIR/bin/wine64" "$@" ;;
+esac

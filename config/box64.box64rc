@@ -1,0 +1,19 @@
+# /etc/box64.box64rc  — Perfiles de rendimiento por proceso para Box64.
+# Sintaxis: [nombre_del_ejecutable] seguido de VARIABLES=valor (las mismas que
+# las variables de entorno BOX64_*). Ver docs/USAGE.md en el repo ptitSeb/box64.
+#
+# Valores CONSERVADORES, válidos para Exynos 2400 (Cortex-X4/A720). Sube la
+# agresividad sólo si una app lo necesita y verifica que no rompe nada.
+
+# Ajustes globales (aplican a todo proceso emulado):
+[default]
+# Evita cálculos extra de NaN/redondeo x87/SSE: gran mejora, casi siempre seguro.
+BOX64_DYNAREC_FASTNAN=1
+BOX64_DYNAREC_FASTROUND=1
+# Silencia el banner/log de Box64 (menos ruido en la terminal de Termux).
+BOX64_LOG=0
+
+# Wine: el proceso que ejecuta Windows.
+[wine64]
+BOX64_DYNAREC_FASTNAN=1
+BOX64_DYNAREC_FASTROUND=1
